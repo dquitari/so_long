@@ -189,13 +189,23 @@ int	coords_tally_update(char **lm_coords, t_xy b)
 
 int	path_test(char **map, t_xy size, char **lm_coords)
 {
-	
-	
-	
-	
-	
-	
-	
+	t_walk_list	*wl;
+	t_xy	b;
+	int	index;
+
+	wl = NULL;
+	b.x = lm_coords[0][0];
+	b.y = lm_coords[0][1];
+	index = 0;
+	if (b.y - 1 > 0 && b.y - 1 < size - 1 && map[b.y - 1][b.x] != 1)
+	{
+		new = ft_lstnew();
+		new->x = b.x;
+		new->y = b.y - 1;
+		ft_lstadd_back(wl, new);
+		index++;
+	}
+	//repeat for left, down, right
 	
 	
 	
