@@ -3,18 +3,22 @@ example.c -- barebones tester, prints image and moves it
 MLX CodamMLX
 
      x   y
-char[13][7]
+char[7][7]
 
-1111111111111
-1E    C     1
-11111111111 1
-1     C     1
-1 11111111111
-1     C    P1
-1111111111111*/
+1111111
+1E C  1
+11111 1
+1  P C1
+1 11111
+1  C C1
+1111111
+*/
 
 
 #include "so_long.h"
+
+
+//INITIALIZER
 
 
 t_xy	xy_initializer()
@@ -37,6 +41,35 @@ t_landmarks	lm_initializer()
 	new.total = 0;
 	return (new);
 }
+
+
+//PRINTER FUNCTIONS
+
+
+void	lm_coords_printer(char **lm_coords, t_landmarks lm)
+{
+	int	y;
+	int	x;
+
+	y = 0;
+	x = 0;
+	while (y < lm.total)
+	{
+		while (x < 3)
+		{
+			if (x == 2)
+				ft_printf("%c ", lm_coords[y][x++]);
+			else
+				ft_printf("%d ", lm_coords[y][x++]);
+		}
+		ft_printf("\n");
+		x = 0;
+		y++;
+	}
+}
+
+
+
 
 /*typedef struct	s_data {
 	void	*img;
@@ -187,63 +220,79 @@ int	coords_tally_update(char **lm_coords, t_xy b)
 }*/
 
 
-int	path_test(char **map, t_xy size, char **lm_coords)
-{
-	t_walk_list	*wl;
-	t_xy	b;
-	int	index;
 
-	wl = NULL;
-	b.x = lm_coords[0][0];
-	b.y = lm_coords[0][1];
-	index = 0;
-	if (b.y - 1 > 0 && b.y - 1 < size - 1 && map[b.y - 1][b.x] != 1)
+
+
+
+
+
+
+
+
+
+
+
+//PATH TEST
+
+int	ft_add_node(t_walk_list **wl, int x, int y, int index)
+{
+	t_walk_list	*aux;
+	t_walk_list	*new_node;
+
+	aux = *wl;
+	while (aux)
 	{
-		new = ft_lstnew();
-		new->x = b.x;
-		new->y = b.y - 1;
-		ft_lstadd_back(wl, new);
-		index++;
+		if (aux->x == x && aux->y == y)
+			return (0);
+		else
+			aux = aux->next;
 	}
-	//repeat for left, down, right
-	
-	
-	
-	
-	
-	
+	new_node = (t_walk_list *)malloc(sizeof(t_walk_list));
+	new_node->x = x;
+	new_node->y = y;
+	new_node->index = index;
+	ft_lstadd_back(wl, new_node);
+	return (1);
 }
 
-
-
-/*t_xy	size_finder(char **map)
+void	list_printer(t_walk_list *wl)
 {
-	t_xy	size;
-	int	first_x;
+	t_walk_list	*aux;
 
-	size = xy_initializer();
-	first_x = 0;
-	while (map[0][first_x])
-		first_x++;
-	while (map[size.y])
+	aux = wl;
+	while (aux)
 	{
-		while (map[size.y][size.x] != '\0')
-		{
-			size.x++;
-			ft_test_printf("%d %d\n\n", size.x, size.y);	
-		}
-		if (size.x != first_x)
-		{
-			size.x = -1;
-			return (size);
-		}
-		size.x = 0;
-		size.y++;
+		ft_printf("x(%d) - y(%d) - i(%d)\n", aux->x, aux->y, aux->index);
+		aux = aux->next;
 	}
-	return (size);
-}*/
+	ft_printf("\n\n");
+}
 
-//UNEXPECTED SEGFAULT: NEEDS TO BE FIXED
+void	list_maker(t_walk_list *wl, char **map, t_xy size)
+{
+	t_walk_list *aux;
+	static int	index;
+	int	start_index;
+
+	aux = wl;
+	start_index = index;
+	index = 1;
+	while (aux)
+	{
+		if (aux->y - 1 > 0 && map[aux->y - 1][aux->x] != '1')
+			index += ft_add_node(&wl, aux->x, aux->y - 1, index);
+		if (aux->x - 1 > 0 && map[aux->y][aux->x - 1] != '1')
+			index += ft_add_node(&wl, aux->x - 1, aux->y, index);
+		if (aux->y + 1 < size.y - 1 && map[aux->y + 1][aux->x] != '1')
+			index += ft_add_node(&wl, aux->x, aux->y + 1, index);
+		if (aux->x + 1 < size.x - 1 && map[aux->y][aux->x + 1] != '1')
+			index += ft_add_node(&wl, aux->x + 1, aux->y, index);
+		aux = aux->next;
+	}
+	//list_printer(wl);
+	if (start_index != index)
+		list_maker(wl, map, size);
+}
 
 
 char	**lm_coord_line_filler(char **lm_coords, char type, t_xy xy)
@@ -255,21 +304,18 @@ char	**lm_coord_line_filler(char **lm_coords, char type, t_xy xy)
 		lm_coords[0][0] = xy.x;
 		lm_coords[0][1] = xy.y;
 		lm_coords[0][2] = type;
-		lm_coords[0][3] = 0;
 	}
 	if (type == 'E')
 	{
 		lm_coords[1][0] = xy.x;
 		lm_coords[1][1] = xy.y;
 		lm_coords[1][2] = type;
-		lm_coords[1][3] = 0;
 	}
 	if (type == 'C')
 	{
 		lm_coords[i][0] = xy.x;
 		lm_coords[i][1] = xy.y;
 		lm_coords[i][2] = type;
-		lm_coords[i][3] = 0;
 		i++;
 	}
 	/*if (type == 'V')
@@ -277,7 +323,6 @@ char	**lm_coord_line_filler(char **lm_coords, char type, t_xy xy)
 		lm_coords[i + lm.c][0] = xy.x;
 		lm_coords[i + lm.c][1] = xy.y;
 		lm_coords[i + lm.c][2] = type;
-		lm_coords[i + lm.c][3] = 0;
 		i++;
 	}*/
 	return (lm_coords);
@@ -303,34 +348,19 @@ char	**lm_coords_filler(char **map, t_xy size, char **lm_coords)
 	}
 	return (lm_coords);
 }
+
 char	**lm_coords_finder(char **map, t_xy size, t_landmarks lm)
 {
 	char	**lm_coords;
 	int	i;
-	int	y;
-	int	x;
+
 
 	lm_coords = malloc(sizeof(char*) * lm.total);
 	i = 0;
 	while (i < lm.total)
-		lm_coords[i++] = malloc(sizeof(char) * 5);
+		lm_coords[i++] = malloc(sizeof(char) * 4);
 	lm_coords = lm_coords_filler(map, size, lm_coords);
-	
-	y = 0;
-	x = 0;
-	while (y < lm.total)
-	{
-		while (x < 5)
-		{
-			if (x == 2)
-				ft_printf("%c ", lm_coords[y][x++]);
-			else
-				ft_printf("%d ", lm_coords[y][x++]);
-		}
-		ft_printf("\n");
-		x = 0;
-		y++;
-	}	
+	//lm_coords_printer(lm_coords, lm);
 	return(lm_coords);
 }
 
@@ -432,9 +462,40 @@ int	blocks_test (char **map, t_xy size)
 	return (1);
 }
 
+
+
+int	path_test (char **lm_coords, t_landmarks lm, t_walk_list *wl)
+{
+	t_walk_list	*aux;
+	int	i;
+	int	total;
+
+	aux = wl;
+	i = 0;
+	total = 0;
+	while (lm_coords[i])
+	{
+		while (aux)
+		{
+			if (aux->x == lm_coords[i][0] && aux->y == lm_coords[i][1])
+			{
+				//ft_printf("FOUND (%d, %d)\n", aux->x, aux->y);
+				total++;
+			}
+			aux = aux->next;
+		}
+		aux = wl;
+		i++;
+	}
+	if (total == lm.total)
+		return (1);
+	return (-1);
+}
+
+
 //ENDING &/OR ERROR FUNCTIONS
 
-void	map_freer(char **map)
+/*void	map_freer(char **map)
 {
 	int	y;
 	
@@ -442,26 +503,37 @@ void	map_freer(char **map)
 	while (y < 8)
 		free(map[y++]);
 	free(map);
-}
+}*/
 
-void	lm_coords_freer(char **lm_coords, int total)
+/*t_xy	size_test(char **map)
 {
-	int	i;
+	t_xy	size;
+	int	first_x;
 
-	i = total;
-	while (i >= 0)
-		free (lm_coords[i--]);
-	free (lm_coords);
-}
+	size = xy_initializer();
+	first_x = 0;
+	while (map[0][first_x])
+		first_x++;
+	while (map[size.y])
+	{
+		while (map[size.y][size.x] != '\0')
+		{
+			size.x++;
+			ft_test_printf("%d %d\n\n", size.x, size.y);	
+		}
+		if (size.x != first_x)
+		{
+			size.x = -1;
+			return (size);
+		}
+		size.x = 0;
+		size.y++;
+	}
+	return (size);
+}*/
 
-int	ft_error(char **map)
-{
-	map_freer(map);
-	/*if (lm_coords != NULL)
-		lm_coords_freer(lm_coords, lm.total);*/
-	ft_test_printf("ERROR: INVALID MAP\n\n");
-	return (-1);
-}
+//UNEXPECTED SEGFAULT: NEEDS TO BE FIXED
+
 
 //-----
 
@@ -473,34 +545,36 @@ int	main()
 	t_xy	size;
 	t_landmarks	lm;
 	char **lm_coords = NULL;
+	t_walk_list	*wl;
 
+	wl = NULL;
 	map = malloc(sizeof(char *) * 8);
 	map[0] = "1111111";
 	map[1] = "1E0C001";
 	map[2] = "1111101";
-	map[3] = "100C0C1";
+	map[3] = "100P0C1";
 	map[4] = "1011111";
-	map[5] = "100C0P1";
+	map[5] = "100C0C1";
 	map[6] = "1111111";
 	map[7] = "\0";
 	ft_test_printf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n", map[0], map[1], map[2], map[3], map[4], map[5], map[6]);
-	//size = size_finder(map);
-	size.y = 7;
+	//size = size_test(map);
 	size.x = 7;
-	ft_test_printf("t_xy size = %d, %d\n\n", size.x, size.y);
+	size.y = 7;
+	ft_test_printf("size = (%d, %d)\n\n", size.x, size.y);
 	if (size.x == -1)
-		return (ft_error(map));
+		return (-1);
 	if (blocks_test(map, size) == -1)
 	{
 		ft_test_printf("blocks_test failed\n");
-		return (ft_error(map));
+		return (-1);
 	}
 	else
 		ft_test_printf("blocks_test passed\n");
 	if (box_walls_test(map, size) == -1)
 	{
 		ft_test_printf("box_walls_test failed\n");
-		return (ft_error(map));
+		return (-1);
 	}
 	else
 		ft_test_printf("box_walls_test passed\n");
@@ -508,15 +582,17 @@ int	main()
 	if (lm.total == -1)
 	{
 		ft_test_printf("landmark_test failed\n");
-		return (ft_error(map));
+		return (-1);
 	}
 	else
 		ft_test_printf("landmark_test passed, lm.total = %d\n", lm.total);
 	lm_coords = lm_coords_finder(map, size, lm);
-	if (path_test(map, size, lm_coords) == -1)
+	ft_add_node(&wl, lm_coords[0][0], lm_coords[0][1], 0);
+	list_maker(wl, map, size);
+	if (path_test (lm_coords, lm, wl) == -1)
 	{
 		ft_test_printf("path_test failed\n");
-		return (ft_error(map));
+		return (-1);
 	}
 	else
 		ft_test_printf("path_test passed\n");
